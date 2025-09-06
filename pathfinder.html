@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PathFinder - Your Career Guidance Platform</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 20px; border-radius: 15px; margin-bottom: 30px; text-align: center; box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37); }
+        .header h1 { color: #4a5568; font-size: 2.5rem; margin-bottom: 10px; }
+        .header p { color: #718096; font-size: 1.2rem; }
+        .main-content { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; }
+        .card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 30px; border-radius: 15px; box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37); transition: transform 0.3s ease; }
+        .card:hover { transform: translateY(-5px); }
+        .card h2 { color: #2d3748; margin-bottom: 20px; font-size: 1.5rem; }
+        .quiz-section { grid-column: 1 / -1; }
+        .quiz-container { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 30px; border-radius: 15px; margin-bottom: 20px; }
+        .question { margin-bottom: 20px; }
+        .question h3 { margin-bottom: 10px; font-size: 1.2rem; }
+        .q-meta { opacity: 0.9; margin-bottom: 15px; font-size: 0.95rem; }
+        .options { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px; }
+        .option { background: rgba(255, 255, 255, 0.2); padding: 15px; border-radius: 10px; cursor: pointer; transition: all 0.3s ease; border: 2px solid transparent; user-select: none; }
+        .option:hover { background: rgba(255, 255, 255, 0.3); transform: scale(1.02); }
+        .option.selected { border-color: #fff; background: rgba(255, 255, 255, 0.4); }
+        .btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 22px; border: none; border-radius: 25px; cursor: pointer; font-size: 1rem; transition: all 0.3s ease; margin: 10px 6px 0 0; }
+        .btn.secondary { background: rgba(255,255,255,0.25); border: 2px solid rgba(255,255,255,0.6); }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); }
+        .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+        .results { display: none; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); padding: 30px; border-radius: 15px; margin-top: 20px; color: #2d3748; }
+        .results h3 { color: #2d3748; margin-bottom: 12px; }
+        .recommendation { background: rgba(255, 255, 255, 0.9); padding: 16px; border-radius: 10px; margin-bottom: 12px; }
+        .colleges-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .college-card { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); padding: 20px; border-radius: 10px; color: #2d3748; }
+        .college-card h4 { margin-bottom: 10px; color: #744210; }
+        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .feature-card { background: rgba(255, 255, 255, 0.95); padding: 25px; border-radius: 15px; text-align: center; box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37); }
+        .feature-icon { font-size: 3rem; margin-bottom: 15px; }
+        .timeline { background: rgba(255, 255, 255, 0.95); padding: 30px; border-radius: 15px; box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37); }
+        .timeline-item { background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%); padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 5px solid #e17055; }
+        .parent-mode { background: linear-gradient(135deg, #81ecec 0%, #6c5ce7 100%); color: white; padding: 30px; border-radius: 15px; margin-bottom: 30px; }
+        .language-selector { margin-bottom: 20px; }
+        .language-selector select { padding: 10px 15px; border-radius: 25px; border: none; font-size: 1rem; background: white; color: #333; }
+        .progress-bar { background: rgba(255, 255, 255, 0.3); height: 10px; border-radius: 5px; margin-bottom: 10px; overflow: hidden; }
+        .progress-fill { background: white; height: 100%; border-radius: 5px; transition: width 0.3s ease; width: 0%; }
+        .progress-text { font-size: 0.95rem; opacity: 0.9; margin-bottom: 12px; }
+        /* Horizontal bars for analysis */
+        .bar { background: rgba(0,0,0,0.08); height: 10px; border-radius: 6px; overflow: hidden; margin-top: 6px; }
+        .bar > span { display: block; height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); width: 0%; transition: width 0.6s ease; }
+        .legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 12px; }
+        .legend-item { background: rgba(255,255,255,0.9); padding: 12px; border-radius: 8px; }
+        .small { font-size: 0.9rem; color: #4a5568; }
+        @media (max-width: 768px) { .main-content { grid-template-columns: 1fr; } .header h1 { font-size: 2rem; } .options { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header class="header">
+        <div class="language-selector">
+            <select id="languageSelect">
+                <option value="en">English</option>
+                <option value="hi">हिंदी</option>
+                <option value="ur">اردو</option>
+                <option value="pa">ਪੰਜਾਬੀ</option>
+            </select>
+        </div>
+        <h1>🎯 PathFinder</h1>
+        <p>Your AI-powered career guidance platform for government colleges</p>
+    </header>
+
+    <div class="feature-grid">
+        <div class="feature-card"><div class="feature-icon">📋</div><h3>Aptitude Quiz</h3><p>Discover your strengths and interests through our scientifically designed assessment</p></div>
+        <div class="feature-card"><div class="feature-icon">🏫</div><h3>College Finder</h3><p>Find nearby government colleges with detailed information about courses and facilities</p></div>
+        <div class="feature-card"><div class="feature-icon">🚀</div><h3>Career Mapping</h3><p>Visualize career paths from your chosen degree to job opportunities</p></div>
+        <div class="feature-card"><div class="feature-icon">💰</div><h3>Scholarships</h3><p>Get alerts about scholarships and financial aid opportunities</p></div>
+    </div>
+
+    <div class="parent-mode">
+        <h2>👨‍👩‍👧‍👦 Parent Mode</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 20px;">
+            <div style="background: rgba(255, 255, 255, 0.2); padding: 20px; border-radius: 10px;"><h4>📊 ROI Analysis</h4><p>Course fees vs expected salary after graduation</p></div>
+            <div style="background: rgba(255, 255, 255, 0.2); padding: 20px; border-radius: 10px;"><h4>🏠 Distance & Hostel</h4><p>Travel requirements and accommodation options</p></div>
+            <div style="background: rgba(255, 255, 255, 0.2); padding: 20px; border-radius: 10px;"><h4>🎯 Government Jobs</h4><p>Direct pathways to civil services and PSU roles</p></div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="card quiz-section">
+            <div class="quiz-container">
+                <h2>🧠 Career Aptitude Assessment</h2>
+                <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+                <div class="progress-text" id="progressText">Question 1 of 50</div>
+                <div id="quiz-content">
+                    <div class="question">
+                        <div class="q-meta" id="qMeta">Pick one option that best matches you.</div>
+                        <h3 id="question-text">Which activities do you enjoy most?</h3>
+                        <div class="options" id="options-container"></div>
+                    </div>
+                    <div class="controls">
+                        <button class="btn secondary" id="prevBtn" aria-label="Previous question">⬅ Previous</button>
+                        <button class="btn" id="nextBtn" aria-label="Next question">Next ➡</button>
+                        <button class="btn secondary" id="saveBtn" title="Save progress locally">💾 Save</button>
+                        <button class="btn secondary" id="resetBtn" title="Reset quiz">♻ Reset</button>
+                    </div>
+                    <div class="small" style="margin-top:8px;">Tip: You can use 1/2/3/4 keys to select options, and Enter to go next.</div>
+                </div>
+                <div class="results" id="results">
+                    <h3>🎉 Your Personalized Career Recommendations</h3>
+                    <p id="summaryText" class="small"></p>
+                    <div id="analysisBars" class="legend"></div>
+                    <div id="recommendations" style="margin-top:12px;"></div>
+                    <div class="controls" style="margin-top:10px;">
+                        <button class="btn" onclick="showColleges()">Find Nearby Colleges</button>
+                        <button class="btn" onclick="showTimeline()">View Timeline</button>
+                        <button class="btn secondary" id="exportBtn">⬇ Export Report</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🗺 Course to Career Map</h2>
+            <div style="background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%); padding: 20px; border-radius: 10px; color: white; margin-bottom: 15px;">
+                <h4>B.Sc. Computer Science</h4>
+                <p>↓ Skills: Programming, Database, Web Dev</p>
+                <p>↓ Jobs: Software Engineer, Data Analyst</p>
+                <p>💰 Salary: ₹3-8 LPA</p>
+            </div>
+            <div style="background: linear-gradient(135deg, #fd79a8 0%, #e84393 100%); padding: 20px; border-radius: 10px; color: white; margin-bottom: 15px;">
+                <h4>B.Com</h4>
+                <p>↓ Skills: Accounting, Finance, Taxation</p>
+                <p>↓ Jobs: Accountant, Bank Officer, CA</p>
+                <p>💰 Salary: ₹2-6 LPA</p>
+            </div>
+            <div style="background: linear-gradient(135deg, #00b894 0%, #00a085 100%); padding: 20px; border-radius: 10px; color: white;">
+                <h4>BA English</h4>
+                <p>↓ Skills: Communication, Writing, Research</p>
+                <p>↓ Jobs: Content Writer, Teacher, Journalist</p>
+                <p>💰 Salary: ₹2-5 LPA</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="timeline" id="timelineSection" style="display: none;">
+        <h2>📅 Important Timeline & Alerts</h2>
+        <div class="timeline-item"><h4>🎓 College Admissions</h4><p><strong>Deadline:</strong> June 30, 2025</p><p>Application process for undergraduate courses in government colleges</p></div>
+        <div class="timeline-item"><h4>💰 Scholarship Applications</h4><p><strong>Deadline:</strong> July 15, 2025</p><p>National and state-level scholarship programs</p></div>
+        <div class="timeline-item"><h4>📋 Entrance Exams</h4><p><strong>Registration:</strong> May 1 - May 31, 2025</p><p>Common entrance tests for professional courses</p></div>
+    </div>
+
+    <div id="collegesSection" style="display: none;">
+        <div class="card">
+            <h2>🏫 Nearby Government Colleges</h2>
+            <div class="colleges-grid">
+                <div class="college-card"><h4>Government College, Sector 14</h4><p><strong>Distance:</strong> 5.2 km</p><p><strong>Courses:</strong> BA, BSc, BCom</p><p><strong>Fees:</strong> ₹8,000/year</p><p><strong>Facilities:</strong> Library, Labs, Hostel ✅</p><button class="btn" style="font-size: 0.9rem; padding: 10px 20px;">Compare</button></div>
+                <div class="college-card"><h4>DAV College, Sector 10</h4><p><strong>Distance:</strong> 3.8 km</p><p><strong>Courses:</strong> BCA, BBA, BA</p><p><strong>Fees:</strong> ₹12,000/year</p><p><strong>Facilities:</strong> Library, Computer Lab</p><button class="btn" style="font-size: 0.9rem; padding: 10px 20px;">Compare</button></div>
+                <div class="college-card"><h4>MCM College, Sector 36</h4><p><strong>Distance:</strong> 8.1 km</p><p><strong>Courses:</strong> BSc, MSc, BA</p><p><strong>Fees:</strong> ₹10,000/year</p><p><strong>Facilities:</strong> Library, Labs, Sports</p><button class="btn" style="font-size: 0.9rem; padding: 10px 20px;">Compare</button></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>📊 Counsellor Dashboard</h2>
+        <p style="color: #718096; margin-bottom: 20px;">Real-time insights for educators and counsellors</p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <div style="background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%); padding: 20px; border-radius: 10px; color: white; text-align: center;"><h3>156</h3><p>Students Assessed</p></div>
+            <div style="background: linear-gradient(135deg, #fd79a8 0%, #e84393 100%); padding: 20px; border-radius: 10px; color: white; text-align: center;"><h3>89</h3><p>Applications Started</p></div>
+            <div style="background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%); padding: 20px; border-radius: 10px; color: white; text-align: center;"><h3>45</h3><p>Scholarships Matched</p></div>
+        </div>
+        <button class="btn" style="margin-top: 20px;" id="exportDashboardBtn">Export Report</button>
+    </div>
+
+    <footer style="text-align: center; margin-top: 50px; padding: 30px; background: rgba(255, 255, 255, 0.95); border-radius: 15px;">
+        <h3 style="color: #4a5568; margin-bottom: 15px;">🚀 Ready to Transform Education?</h3>
+        <p style="color: #718096; margin-bottom: 20px;">Join thousands of students finding their perfect career path through PathFinder</p>
+        <button class="btn" onclick="startDemo()">Start Free Demo</button>
+        <button class="btn" onclick="contactSupport()">Contact Support</button>
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e2e8f0; color: #a0aec0;">
+            <p>🔒 Your data stays private • 🌍 Works offline • 🏛 Government college focused</p>
+        </div>
+    </footer>
+</div>
+
+<script>
+// ------------------ Quiz Data: 50 Questions ------------------
+// Each question maps to a stream: 'science', 'arts', 'commerce', 'social'
+// Balanced set: 13 science, 13 arts, 12 commerce, 12 social = 50
+const quizData = [
+    // SCIENCE (13)
+    { question: "Which class do you look forward to the most?", options: [
+        { text: "🔬 Physics/Chemistry experiments", value: "science" },
+        { text: "🎨 Art & literature projects", value: "arts" },
+        { text: "💼 Business/case studies", value: "commerce" },
+        { text: "🤝 Community/field work", value: "social" }
+    ]},
+    { question: "You enjoy problems that require…", options: [
+        { text: "🧠 Logical reasoning and calculations", value: "science" },
+        { text: "📝 Imagination and storytelling", value: "arts" },
+        { text: "📈 Profit/loss and market logic", value: "commerce" },
+        { text: "🫱🏽‍🫲🏿 Understanding people and society", value: "social" }
+    ]},
+    { question: "A perfect project for you would be…", options: [
+        { text: "🧪 Building a working model or app", value: "science" },
+        { text: "🎭 Directing a short play", value: "arts" },
+        { text: "💹 Launching a small business", value: "commerce" },
+        { text: "👥 Running a local survey", value: "social" }
+    ]},
+    { question: "Which news headline makes you click?", options: [
+        { text: "🚀 New space tech discovered", value: "science" },
+        { text: "🎬 Film/arts festival highlights", value: "arts" },
+        { text: "💵 Budget and startup funding", value: "commerce" },
+        { text: "🏛 Public policy and welfare", value: "social" }
+    ]},
+    { question: "Your favorite competition would be…", options: [
+        { text: "🧩 Science/Math Olympiad", value: "science" },
+        { text: "🖌 Poster/poetry contest", value: "arts" },
+        { text: "📊 Business plan pitch", value: "commerce" },
+        { text: "🗣 Debate/social issues", value: "social" }
+    ]},
+    { question: "Which tool attracts you most?", options: [
+        { text: "💻 Code editor/lab kit", value: "science" },
+        { text: "🖌 Sketchbook/camera", value: "arts" },
+        { text: "📊 Spreadsheet/ledger", value: "commerce" },
+        { text: "📋 Survey forms/maps", value: "social" }
+    ]},
+    { question: "You prefer books that…", options: [
+        { text: "🔎 Explain how things work", value: "science" },
+        { text: "📚 Explore human emotions", value: "arts" },
+        { text: "💸 Teach money & markets", value: "commerce" },
+        { text: "🌍 Describe cultures & society", value: "social" }
+    ]},
+    { question: "Weekend choice?", options: [
+        { text: "🛠 Tinker with gadgets", value: "science" },
+        { text: "🎧 Compose/paint/create", value: "arts" },
+        { text: "🛍 Sell online/track sales", value: "commerce" },
+        { text: "🤝 Volunteer in community", value: "social" }
+    ]},
+    { question: "You enjoy tasks that are…", options: [
+        { text: "⚙️ Structured, rule-based", value: "science" },
+        { text: "🎨 Open-ended, expressive", value: "arts" },
+        { text: "📈 Target-driven", value: "commerce" },
+        { text: "🫂 People-centered", value: "social" }
+    ]},
+    { question: "Which internship sounds exciting?", options: [
+        { text: "🧪 Lab assistant at research center", value: "science" },
+        { text: "📰 Content/design studio", value: "arts" },
+        { text: "🏦 Bank/finance assistant", value: "commerce" },
+        { text: "🏥 NGO/social outreach", value: "social" }
+    ]},
+    { question: "Your role in a team?", options: [
+        { text: "🔧 Problem-solver/tech lead", value: "science" },
+        { text: "🎤 Presenter/creative lead", value: "arts" },
+        { text: "📊 Planner/budget lead", value: "commerce" },
+        { text: "🤝 Coordinator/mediator", value: "social" }
+    ]},
+    { question: "What gives you satisfaction?", options: [
+        { text: "✔️ Finding the correct answer", value: "science" },
+        { text: "✨ Creating something unique", value: "arts" },
+        { text: "💰 Closing a profitable deal", value: "commerce" },
+        { text: "💗 Improving lives around you", value: "social" }
+    ]},
+    { question: "Pick the puzzle you like most", options: [
+        { text: "🧮 Logic/number puzzles", value: "science" },
+        { text: "🧩 Word/creativity games", value: "arts" },
+        { text: "📈 Strategy/management sims", value: "commerce" },
+        { text: "🗣 Roleplay/conflict resolution", value: "social" }
+    ]},
+
+    // ARTS (13)
+    { question: "Your notebook margins are usually…", options: [
+        { text: "📐 Filled with diagrams", value: "science" },
+        { text: "🎨 Full of doodles/lyrics", value: "arts" },
+        { text: "📊 Numbers & charts", value: "commerce" },
+        { text: "📝 Quotes about people", value: "social" }
+    ]},
+    { question: "Best compliment for you?", options: [
+        { text: "🧠 ‘So analytical!’", value: "science" },
+        { text: "🌟 ‘So creative!’", value: "arts" },
+        { text: "💼 ‘So enterprising!’", value: "commerce" },
+        { text: "🫶 ‘So empathetic!’", value: "social" }
+    ]},
+    { question: "You value a teacher who…", options: [
+        { text: "🔍 Proves concepts rigorously", value: "science" },
+        { text: "🎭 Encourages expression", value: "arts" },
+        { text: "📈 Shares practical business tips", value: "commerce" },
+        { text: "👂 Understands student needs", value: "social" }
+    ]},
+    { question: "Your ideal workspace is…", options: [
+        { text: "🧪 Clean, instruments neatly placed", value: "science" },
+        { text: "🎨 Colorful, inspiration boards", value: "arts" },
+        { text: "📁 Organized with trackers", value: "commerce" },
+        { text: "👥 Open, collaborative tables", value: "social" }
+    ]},
+    { question: "In free time, you watch…", options: [
+        { text: "🧑‍🔬 Tech/science channels", value: "science" },
+        { text: "🎥 Films/poetry/music", value: "arts" },
+        { text: "💹 Stock/business news", value: "commerce" },
+        { text: "🌍 Documentaries on society", value: "social" }
+    ]},
+    { question: "When explaining an idea, you…", options: [
+        { text: "📐 Draw a diagram/flowchart", value: "science" },
+        { text: "🖼 Use metaphors/examples", value: "arts" },
+        { text: "📊 Use numbers and KPIs", value: "commerce" },
+        { text: "👥 Relate to people’s stories", value: "social" }
+    ]},
+    { question: "What frustrates you most?", options: [
+        { text: "❌ Inaccurate results", value: "science" },
+        { text: "🔒 Creative restrictions", value: "arts" },
+        { text: "📉 Missing targets", value: "commerce" },
+        { text: "😕 Miscommunication in groups", value: "social" }
+    ]},
+    { question: "You’d love a course that offers…", options: [
+        { text: "🔬 Labs & advanced math", value: "science" },
+        { text: "🎨 Portfolio & performances", value: "arts" },
+        { text: "💼 Internships with firms", value: "commerce" },
+        { text: "🤝 Field visits & surveys", value: "social" }
+    ]},
+    { question: "A feedback that helps you most…", options: [
+        { text: "📏 ‘Method needs fix’", value: "science" },
+        { text: "✨ ‘Make it more original’", value: "arts" },
+        { text: "💱 ‘Improve ROI/efficiency’", value: "commerce" },
+        { text: "🫂 ‘Consider user needs’", value: "social" }
+    ]},
+    { question: "You often think in…", options: [
+        { text: "🔢 Numbers/equations", value: "science" },
+        { text: "🎭 Scenes/images", value: "arts" },
+        { text: "📈 Graphs/metrics", value: "commerce" },
+        { text: "🧑‍🤝‍🧑 Relationships/systems", value: "social" }
+    ]},
+    { question: "Your dream achievement…", options: [
+        { text: "🏆 Patent or discovery", value: "science" },
+        { text: "🏅 Award-winning art/book", value: "arts" },
+        { text: "💳 Building a unicorn startup", value: "commerce" },
+        { text: "🏛 Social change initiative", value: "social" }
+    ]},
+    { question: "You prefer assignments that…", options: [
+        { text: "🧪 Test hypotheses", value: "science" },
+        { text: "🎬 Allow creative formats", value: "arts" },
+        { text: "📊 Involve budgets/markets", value: "commerce" },
+        { text: "👥 Include interviews", value: "social" }
+    ]},
+    { question: "Your note-taking style is…", options: [
+        { text: "📐 Structured bullet points", value: "science" },
+        { text: "🖍 Mind-maps/visuals", value: "arts" },
+        { text: "📈 Tables/figures", value: "commerce" },
+        { text: "📝 Quotes/observations", value: "social" }
+    ]},
+
+    // COMMERCE (12)
+    { question: "Group project budget is short. You will…", options: [
+        { text: "🔧 Optimize materials scientifically", value: "science" },
+        { text: "🎭 Make a minimal creative version", value: "arts" },
+        { text: "💰 Rework finances/get sponsors", value: "commerce" },
+        { text: "🤝 Negotiate contributions fairly", value: "social" }
+    ]},
+    { question: "Which club would you join?", options: [
+        { text: "🤖 Robotics", value: "science" },
+        { text: "🎤 Drama/Literary", value: "arts" },
+        { text: "💹 Entrepreneurship", value: "commerce" },
+        { text: "🫱🏽‍🫲🏿 Social service", value: "social" }
+    ]},
+    { question: "In a marketplace game, you focus on…", options: [
+        { text: "⚙️ Product quality & specs", value: "science" },
+        { text: "🎨 Branding & design", value: "arts" },
+        { text: "💵 Pricing & margins", value: "commerce" },
+        { text: "🧑‍🤝‍🧑 Customer relations", value: "social" }
+    ]},
+    { question: "A guest lecture you’d attend first…", options: [
+        { text: "🛰 AI/Space/Med tech", value: "science" },
+        { text: "🎬 Film-making/Design", value: "arts" },
+        { text: "📊 Finance/Marketing", value: "commerce" },
+        { text: "🏛 Public policy/NGO work", value: "social" }
+    ]},
+    { question: "You track your…", options: [
+        { text: "⌛ Efficiency/time precisely", value: "science" },
+        { text: "✨ Ideas/inspiration notes", value: "arts" },
+        { text: "💳 Expenses & savings", value: "commerce" },
+        { text: "📅 Social commitments", value: "social" }
+    ]},
+    { question: "When choosing a career, you consider…", options: [
+        { text: "🧪 Technical growth", value: "science" },
+        { text: "🎨 Creative freedom", value: "arts" },
+        { text: "💰 Financial stability", value: "commerce" },
+        { text: "🤝 Social impact", value: "social" }
+    ]},
+    { question: "How do you plan events?", options: [
+        { text: "📐 Timeline & checklists", value: "science" },
+        { text: "🎭 Theme & aesthetics", value: "arts" },
+        { text: "💵 Budget & sponsors", value: "commerce" },
+        { text: "👥 Volunteers & roles", value: "social" }
+    ]},
+    { question: "A brand you admire because…", options: [
+        { text: "🔧 Engineering excellence", value: "science" },
+        { text: "🎨 Iconic design/story", value: "arts" },
+        { text: "💹 Smart strategy/price", value: "commerce" },
+        { text: "🌍 Ethical/social work", value: "social" }
+    ]},
+    { question: "In games, your style is…", options: [
+        { text: "🧠 Solve puzzles precisely", value: "science" },
+        { text: "🎭 Build/roleplay worlds", value: "arts" },
+        { text: "📈 Optimize resources", value: "commerce" },
+        { text: "🤝 Lead teams diplomatically", value: "social" }
+    ]},
+    { question: "Pick an elective", options: [
+        { text: "🧮 Advanced math/stats", value: "science" },
+        { text: "🖌 Visual arts/film", value: "arts" },
+        { text: "💱 Accounting/marketing", value: "commerce" },
+        { text: "🧭 Sociology/psychology", value: "social" }
+    ]},
+    { question: "What motivates you daily?", options: [
+        { text: "✅ Accuracy/perfection", value: "science" },
+        { text: "🌈 Self-expression", value: "arts" },
+        { text: "📈 Hitting targets/income", value: "commerce" },
+        { text: "🫶 Helping others", value: "social" }
+    ]},
+    { question: "Your dream internship KPI is…", options: [
+        { text: "🧪 Successful experiments", value: "science" },
+        { text: "🎨 Portfolio pieces", value: "arts" },
+        { text: "💵 Revenue growth", value: "commerce" },
+        { text: "👥 Beneficiaries impacted", value: "social" }
+    ]},
+
+    // SOCIAL (12)
+    { question: "During conflicts, you…", options: [
+        { text: "🔍 Check facts/rules", value: "science" },
+        { text: "🎭 Understand feelings", value: "arts" },
+        { text: "📈 Evaluate costs/benefits", value: "commerce" },
+        { text: "🕊 Seek fair compromise", value: "social" }
+    ]},
+    { question: "Your newsfeed mostly has…", options: [
+        { text: "🧪 Tech/science blogs", value: "science" },
+        { text: "🎨 Creators & arts pages", value: "arts" },
+        { text: "💹 Finance/startup tips", value: "commerce" },
+        { text: "🌍 Social issues/volunteering", value: "social" }
+    ]},
+    { question: "What do friends ask you for?", options: [
+        { text: "🧮 Homework help (STEM)", value: "science" },
+        { text: "🎬 Ideas for posters/captions", value: "arts" },
+        { text: "💰 Money management advice", value: "commerce" },
+        { text: "🫂 Advice on people matters", value: "social" }
+    ]},
+    { question: "Which field trip is best?", options: [
+        { text: "🏭 Science museum/lab", value: "science" },
+        { text: "🖼 Art museum/studio", value: "arts" },
+        { text: "🏦 Stock exchange/firm", value: "commerce" },
+        { text: "🏛 Parliament/NGO", value: "social" }
+    ]},
+    { question: "Your desk calendar tracks…", options: [
+        { text: "🧪 Deadlines for experiments", value: "science" },
+        { text: "🎨 Submission dates for art", value: "arts" },
+        { text: "💰 Billing cycles", value: "commerce" },
+        { text: "🤝 Community events", value: "social" }
+    ]},
+    { question: "You admire professionals who…", options: [
+        { text: "🔭 Discover/invent", value: "science" },
+        { text: "🖌 Create/perform", value: "arts" },
+        { text: "💼 Build enterprises", value: "commerce" },
+        { text: "🧑‍⚕️ Serve communities", value: "social" }
+    ]},
+    { question: "Preferred assignment partner?", options: [
+        { text: "🧠 Smart analyst", value: "science" },
+        { text: "🎨 Creative thinker", value: "arts" },
+        { text: "💼 Strategic planner", value: "commerce" },
+        { text: "🫶 Empathetic leader", value: "social" }
+    ]},
+    { question: "Your big goal includes…", options: [
+        { text: "🧪 Solving complex problems", value: "science" },
+        { text: "🎨 Inspiring people creatively", value: "arts" },
+        { text: "💼 Achieving financial freedom", value: "commerce" },
+        { text: "🤝 Creating social equality", value: "social" }
+    ]},
+    { question: "How do you judge success of a project?", options: [
+        { text: "✅ Accuracy & reliability", value: "science" },
+        { text: "✨ Originality & impact", value: "arts" },
+        { text: "💹 Profitability & growth", value: "commerce" },
+        { text: "🫂 Beneficiary satisfaction", value: "social" }
+    ]},
+    { question: "If given a day to learn, you pick…", options: [
+        { text: "🧮 Calculus/coding", value: "science" },
+        { text: "🎨 Film editing/music", value: "arts" },
+        { text: "💱 Investing/marketing", value: "commerce" },
+        { text: "🧭 Psychology/sociology", value: "social" }
+    ]},
+    { question: "Which fair booth would you run?", options: [
+        { text: "🔬 Science demo", value: "science" },
+        { text: "🎭 Open mic/arts show", value: "arts" },
+        { text: "💰 Startup idea stall", value: "commerce" },
+        { text: "🤝 Awareness campaign", value: "social" }
+    ]},
+    { question: "How do you learn best?", options: [
+        { text: "🧪 Doing experiments", value: "science" },
+        { text: "🎧 Through stories & visuals", value: "arts" },
+        { text: "📊 Case studies & markets", value: "commerce" },
+        { text: "👥 Group activities", value: "social" }
+    ]}
+];
+
+// ------------------ State & Utilities ------------------
+const STATE_KEY = 'pathfinder_quiz_state_v2';
+let currentQuestion = 0; // 0-indexed
+let userResponses = []; // array of stream values per question index
+
+const els = {
+  progressFill: document.getElementById('progressFill'),
+  progressText: document.getElementById('progressText'),
+  qText: document.getElementById('question-text'),
+  qMeta: document.getElementById('qMeta'),
+  options: document.getElementById('options-container'),
+  quizContent: document.getElementById('quiz-content'),
+  results: document.getElementById('results'),
+  recommendations: document.getElementById('recommendations'),
+  analysisBars: document.getElementById('analysisBars'),
+  summaryText: document.getElementById('summaryText'),
+  prevBtn: document.getElementById('prevBtn'),
+  nextBtn: document.getElementById('nextBtn'),
+  saveBtn: document.getElementById('saveBtn'),
+  resetBtn: document.getElementById('resetBtn'),
+};
+
+const streamMap = {
+  science: { name: 'Science', courses: 'B.Sc, B.Tech, MBBS, Pharmacy, Data Science', icon: '🔬' },
+  arts: { name: 'Arts & Humanities', courses: 'BA, BFA, Journalism, Design, Media', icon: '🎨' },
+  commerce: { name: 'Commerce & Management', courses: 'B.Com, BBA, Finance, Marketing, CA/CS', icon: '💼' },
+  social: { name: 'Social Sciences', courses: 'BA Psychology, Sociology, Social Work, Public Policy', icon: '🤝' },
+};
+
+function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
+
+function saveState(){
+  const payload = { currentQuestion, userResponses };
+  localStorage.setItem(STATE_KEY, JSON.stringify(payload));
+}
+function loadState(){
+  try {
+    const raw = localStorage.getItem(STATE_KEY);
+    if(!raw) return false;
+    const data = JSON.parse(raw);
+    if(!data || !Array.isArray(data.userResponses)) return false;
+    currentQuestion = clamp(data.currentQuestion ?? 0, 0, quizData.length);
+    userResponses = data.userResponses.slice(0, quizData.length);
+    return true;
+  } catch(e){ return false; }
+}
+function clearState(){ localStorage.removeItem(STATE_KEY); }
+
+// ------------------ Rendering ------------------
+function updateProgress(){
+  const answered = Math.min(userResponses.filter(Boolean).length + (getCurrentSelection()?1:0), quizData.length);
+  const pct = Math.round(((currentQuestion + 1) / quizData.length) * 100);
+  els.progressFill.style.width = pct + '%';
+  els.progressText.textContent = `Question ${currentQuestion + 1} of ${quizData.length}`;
+}
+
+function renderQuestion(){
+  if(currentQuestion >= quizData.length){ showResults(); return; }
+  const q = quizData[currentQuestion];
+  els.qText.textContent = q.question;
+  els.options.innerHTML = '';
+
+  q.options.forEach((opt, idx) => {
+    const div = document.createElement('div');
+    div.className = 'option';
+    div.tabIndex = 0;
+    div.dataset.value = opt.value;
+    div.dataset.idx = idx + 1; // 1..4 for keyboard
+    div.textContent = opt.text;
+    div.onclick = () => selectOption(div);
+    div.onkeydown = (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); selectOption(div);} };
+    els.options.appendChild(div);
+  });
+
+  // Pre-select if answered earlier
+  const prev = userResponses[currentQuestion];
+  if(prev){
+    const match = Array.from(document.querySelectorAll('.option')).find(o => o.dataset.value === prev);
+    if(match) match.classList.add('selected');
+  }
+
+  updateProgress();
+  toggleNavButtons();
+}
+
+function getCurrentSelection(){
+  const sel = document.querySelector('.option.selected');
+  return sel ? sel.dataset.value : null;
+}
+
+function selectOption(el){
+  document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function toggleNavButtons(){
+  els.prevBtn.disabled = currentQuestion === 0;
+  els.nextBtn.textContent = currentQuestion === quizData.length - 1 ? 'Finish ✅' : 'Next ➡';
+}
+
+function nextQuestion(){
+  const selected = getCurrentSelection();
+  if(!selected){ alert('Please select an option before continuing.'); return; }
+  userResponses[currentQuestion] = selected;
+  currentQuestion++;
+  saveState();
+  if(currentQuestion < quizData.length){
+    renderQuestion();
+  } else {
+    showResults();
+  }
+}
+
+function prevQuestion(){
+  if(currentQuestion === 0) return;
+  // Save current selection (if any)
+  const selected = getCurrentSelection();
+  if(selected){ userResponses[currentQuestion] = selected; saveState(); }
+  currentQuestion--; renderQuestion();
+}
+
+// ------------------ Results & Analysis ------------------
+function computeCounts(){
+  const counts = { science:0, arts:0, commerce:0, social:0 };
+  userResponses.forEach(v => { if(v && counts.hasOwnProperty(v)) counts[v]++; });
+  return counts;
+}
+
+function asPercent(n, total){ return total ? Math.round((n/total)*100) : 0; }
+
+function showResults(){
+  // if user finished last question without selecting, guard
+  const selected = getCurrentSelection();
+  if(currentQuestion < quizData.length && selected){ userResponses[currentQuestion] = selected; }
+  saveState();
+
+  els.quizContent.style.display = 'none';
+  els.results.style.display = 'block';
+
+  const counts = computeCounts();
+  const total = userResponses.filter(Boolean).length;
+  const entries = Object.entries(counts).sort((a,b)=> b[1]-a[1]);
+  const [topKey, topVal] = entries[0];
+  const topPct = asPercent(topVal, total);
+
+  // Summary text
+  const ties = entries.filter(([,v]) => v === topVal).map(([k]) => streamMap[k].name);
+  const topLabel = ties.length>1 ? `${ties.slice(0,-1).join(', ')} and ${ties.slice(-1)} (tie)` : streamMap[topKey].name;
+  els.summaryText.textContent = `You show the strongest preference for: ${topLabel}. Completed ${total}/${quizData.length} questions. This profile is based on your answers across analytical, creative, business, and social choices.`;
+
+  // Analysis Bars
+  els.analysisBars.innerHTML = '';
+  Object.keys(streamMap).forEach(key => {
+    const pct = asPercent(counts[key], total);
+    const card = document.createElement('div');
+    card.className = 'legend-item';
+    card.innerHTML = `<strong>${streamMap[key].icon} ${streamMap[key].name}: ${pct}%</strong>
+      <div class="bar"><span style="width:${pct}%"></span></div>
+      <div class="small">Sample courses: ${streamMap[key].courses}</div>`;
+    els.analysisBars.appendChild(card);
+  });
+
+  // Top 2 recommendations
+  els.recommendations.innerHTML = '';
+  entries.slice(0,2).forEach(([key, val]) => {
+    const pct = asPercent(val, total);
+    const info = streamMap[key];
+    const rec = document.createElement('div');
+    rec.className = 'recommendation';
+    rec.innerHTML = `<h4>${info.icon} ${info.name} - ${pct}% Match</h4>
+      <p><strong>Recommended Courses:</strong> ${info.courses}</p>
+      <p><strong>Why this fits:</strong> ${pct}% of your choices aligned with ${info.name}. Consider exploring college programs and entrance options in this stream.</p>`;
+    els.recommendations.appendChild(rec);
+  });
+
+  // Scroll into view
+  els.results.scrollIntoView({ behavior: 'smooth' });
+}
+
+function resetQuiz(){
+  if(!confirm('Reset quiz and clear saved progress?')) return;
+  currentQuestion = 0;
+  userResponses = [];
+  clearState();
+  els.results.style.display = 'none';
+  els.quizContent.style.display = 'block';
+  renderQuestion();
+}
+
+// Export text report
+function exportReport(){
+  const counts = computeCounts();
+  const total = userResponses.filter(Boolean).length;
+  const percent = Object.fromEntries(Object.entries(counts).map(([k,v])=>[k, asPercent(v,total)]));
+  const ts = new Date().toLocaleString();
+  const lines = [
+    'PathFinder — Aptitude Quiz Report',
+    `Generated: ${ts}`,
+    '',
+    `Questions answered: ${total} / ${quizData.length}`,
+    '',
+    `Science:  ${percent.science}% (${counts.science})`,
+    `Arts:     ${percent.arts}% (${counts.arts})`,
+    `Commerce: ${percent.commerce}% (${counts.commerce})`,
+    `Social:   ${percent.social}% (${counts.social})`,
+    '',
+    'Top suggestions:',
+  ];
+  const entries = Object.entries(counts).sort((a,b)=> b[1]-a[1]).slice(0,2);
+  entries.forEach(([k,v],i)=>{ lines.push(`${i+1}. ${streamMap[k].name} — try: ${streamMap[k].courses}`); });
+  const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'PathFinder_Aptitude_Report.txt'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ------------------ UI Hooks ------------------
+function showColleges(){
+  document.getElementById('collegesSection').style.display = 'block';
+  document.getElementById('collegesSection').scrollIntoView({ behavior: 'smooth' });
+}
+function showTimeline(){
+  document.getElementById('timelineSection').style.display = 'block';
+  document.getElementById('timelineSection').scrollIntoView({ behavior: 'smooth' });
+}
+function startDemo(){
+  currentQuestion = 0; userResponses = []; clearState();
+  els.quizContent.style.display = 'block'; els.results.style.display = 'none';
+  renderQuestion();
+}
+function contactSupport(){
+  alert('📞 Contact Support\nEmail: support@pathfinder.gov.in\nPhone: 1800-PATHFINDER\n🌐 Available in Hindi, English, Urdu, Punjabi');
+}
+
+// Language selector – demo
+const langSel = document.getElementById('languageSelect');
+langSel.addEventListener('change', (e)=>{
+  alert(`Language switched to: ${e.target.options[e.target.selectedIndex].text}\n(Demo functionality - full multilingual support in production)`);
+});
+
+// Controls
+els.nextBtn.addEventListener('click', nextQuestion);
+els.prevBtn.addEventListener('click', prevQuestion);
+els.saveBtn.addEventListener('click', ()=>{ saveState(); alert('Progress saved on this device.'); });
+els.resetBtn.addEventListener('click', resetQuiz);
+
+document.getElementById('exportBtn').addEventListener('click', exportReport);
+document.getElementById('exportDashboardBtn').addEventListener('click', exportReport);
+
+// Keyboard shortcuts: 1-4 to select, Enter to next
+window.addEventListener('keydown', (e)=>{
+  if(els.results.style.display === 'block') return; // ignore when showing results
+  if(['1','2','3','4'].includes(e.key)){
+    const opt = Array.from(document.querySelectorAll('.option')).find(o => o.dataset.idx === e.key);
+    if(opt){ selectOption(opt); }
+  } else if(e.key === 'Enter'){
+    nextQuestion();
+  }
+});
+
+// Offline/online logs
+window.addEventListener('online', ()=>console.log('Online - syncing data...'));
+window.addEventListener('offline', ()=>console.log('Offline mode - data cached locally'));
+
+// ------------------ Init ------------------
+window.addEventListener('load', function(){
+  const hadState = loadState();
+  if(hadState && userResponses.some(Boolean)){
+    if(confirm('We found saved progress. Continue where you left off?')){
+      renderQuestion(); return;
+    } else { clearState(); }
+  }
+  renderQuestion();
+});
+</script>
+</body>
+</html>
